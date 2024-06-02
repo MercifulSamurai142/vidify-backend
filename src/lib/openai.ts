@@ -5,6 +5,7 @@ import dJSON from "dirty-json";
 import { getPrompts } from "./upstash";
 import { getAnthropicChatResponse } from "./anthropic";
 import { MessageParam } from "@anthropic-ai/sdk/resources";
+import { responseSchema } from "./responseSchema";
 dotenv.config();
 
 // Assume the following values if the user hasn't mentioned about them:
@@ -52,7 +53,11 @@ export async function getVideoMetadata(
     // console.log(`🚨 CHECKING SYSTEM PROMPT: ${messages[0].content}`);
     // console.log(`🚨 CHECKING USER PROMPT: ${messages[1].content}`);
 
-    const response = await getAnthropicChatResponse(messages);
+    const response = await getAnthropicChatResponse(
+      messages,
+      responseSchema.videoMetadata_user,
+      "videoMetadata"
+    );
 
     const extractedJson = extractJson(response);
 
@@ -112,7 +117,11 @@ export async function getTalkingPointForIntro(
     tryCount = tryCount + 1;
     console.info(`Getting Intro #${tryCount} TRY!`);
 
-    const response = await getAnthropicChatResponse(messages);
+    const response = await getAnthropicChatResponse(
+      messages,
+      responseSchema.intro_user,
+      "IntroTalkingPoints"
+    );
     const extractedJson = extractJson(response);
 
     const isJSONValid = await checkValidJson(extractedJson);
@@ -169,7 +178,11 @@ export async function getTalkingPoints(
     tryCount = tryCount + 1;
     console.info(`Getting Talking Points #${tryCount} TRY!`);
 
-    const response = await getAnthropicChatResponse(messages);
+    const response = await getAnthropicChatResponse(
+      messages,
+      responseSchema.talkingPoints_user,
+      "TalkingPoints"
+    );
     const extractedJson = extractJson(response);
 
     const isJSONValid = await checkValidJson(extractedJson);
@@ -216,7 +229,11 @@ export async function getTitlesFromData(
     tryCount = tryCount + 1;
     console.info(`Getting Titles #${tryCount} TRY!`);
 
-    const response = await getAnthropicChatResponse(messages);
+    const response = await getAnthropicChatResponse(
+      messages,
+      responseSchema.titles_user,
+      "Titles"
+    );
     const extractedJson = extractJson(response);
 
     console.info(response);
@@ -273,7 +290,11 @@ export async function getTableFromData(
     tryCount = tryCount + 1;
     console.info(`Getting Table #${tryCount} TRY!`);
 
-    const response = await getAnthropicChatResponse(messages);
+    const response = await getAnthropicChatResponse(
+      messages,
+      responseSchema.tables_user,
+      "Tables"
+    );
     const extractedJson = extractJson(response);
 
     const isJSONValid = await checkValidJson(extractedJson);
@@ -331,7 +352,11 @@ export async function getTalkingPointForOutro(
     tryCount = tryCount + 1;
     console.info(`Getting Outro #${tryCount} TRY!`);
 
-    const response = await getAnthropicChatResponse(messages);
+    const response = await getAnthropicChatResponse(
+      messages,
+      responseSchema.outro_user,
+      "OutroTalkingPoints"
+    );
     const extractedJson = extractJson(response);
 
     const isJSONValid = await checkValidJson(extractedJson);

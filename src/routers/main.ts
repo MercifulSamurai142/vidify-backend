@@ -23,7 +23,6 @@ import {
   InitialVideoServerRequest,
 } from "../lib/interfaces";
 import { DEMO_MODE } from "../lib/constants";
-import { checkModerationFlag } from "../lib/openai_utils";
 import { getPrompts } from "../lib/upstash";
 import { anthropicCheckModeration } from "../lib/anthropic";
 dotenv.config();

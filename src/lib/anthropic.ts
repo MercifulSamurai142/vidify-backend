@@ -1,23 +1,20 @@
-import Anthropic from "@anthropic-ai/sdk";
+import Instructor from "@instructor-ai/instructor";
 import dotenv from "dotenv";
-import dJSON from "dirty-json";
-import { getPrompts } from "./upstash";
-import { checkValidJson, extractJson } from "./openai_utils";
-import type { FinalVideoDataFromServer, VideoMetadata } from "./interfaces";
-import {
-  ChatCompletionRequestMessage,
-  CreateChatCompletionRequest,
-} from "openai";
-import { Message, MessageParam } from "@anthropic-ai/sdk/resources";
-import {
-  MessageCreateParamsBase,
-  MessageCreateParamsNonStreaming,
-} from "@anthropic-ai/sdk/resources/messages";
+import { createLLMClient } from "llm-polyglot";
+import { MessageParam } from "@anthropic-ai/sdk/resources";
+import { z } from "zod";
 
 dotenv.config();
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY, // defaults to process.env["ANTHROPIC_API_KEY"]
+const anthropicClient = createLLMClient({
+  provider: "anthropic",
+  apiKey: process.env.OPENAI_API_KEY ?? undefined,
+  maxRetries: 3,
+});
+
+const instructor = Instructor({
+  client: anthropicClient,
+  mode: "TOOLS",
 });
 
 export async function anthropicCheckModeration(input: string) {
@@ -33,34 +30,38 @@ And here is the chat transcript to review and classify:
 </transcript>`;
 
   try {
-    const { content } = await anthropic.messages.create({
+    const completion = await instructor.chat.completions.create({
+      messages: [{ role: "user", content: policyString }],
       model: "claude-3-haiku-20240307",
       max_tokens: 10,
       temperature: 0,
-      messages: [{ role: "user", content: policyString }],
+      response_model: {
+        schema: z.object({
+          flagged: z.boolean(),
+        }),
+        name: "Moderation",
+      },
     });
-
-    const data = await JSON.parse(content[0].text);
 
     console.log(
       `=====================\nPrompt is ${
-        data.flagged ? "FLAGGED!" : "SAFE."
+        completion.flagged ? "FLAGGED!" : "SAFE."
       }\n=====================`
     );
 
-    return { isFlagged: data.flagged };
+    return { isFlagged: completion.flagged };
   } catch (error) {
     console.error("Moderation Error: ", error);
   }
 }
 
 export async function getAnthropicChatResponse(
-  messages: ChatCompletionRequestMessage[],
-  user?: CreateChatCompletionRequest["user"],
-  options: Partial<CreateChatCompletionRequest> = {}
+  messages: MessageParam[],
+  schema: z.ZodSchema<any>,
+  schemaName: string
 ): Promise<string> {
   const anthropicMessages: MessageParam[] = [];
-  messages.map((msg, index) => {
+  messages.map((msg) => {
     const temp: MessageParam = {
       role: msg.role === "user" ? "user" : "assistant",
       content: msg.content,
@@ -68,30 +69,26 @@ export async function getAnthropicChatResponse(
     anthropicMessages.push(temp);
   });
 
-  const anthropicOptions: Partial<MessageCreateParamsNonStreaming> = {
-    max_tokens: options.max_tokens,
-    model: options.model,
-    temperature: options.temperature,
-    top_p: options.top_p,
-  };
-
   try {
-    const { content: AIResponse } = await anthropic.messages.create({
+    const completion = await instructor.chat.completions.create({
       model: "claude-2.0",
       messages: anthropicMessages,
       max_tokens: 1024,
       stream: false,
       temperature: 0.8,
+      response_model: {
+        schema: schema,
+        name: schemaName,
+      },
       // //   top_p: defaultOpenAIRequest.top_p, // disabled as per the docs recommendation.
       // //   frequency_penalty: defaultOpenAIRequest.frequency_penalty,
       // ...anthropicOptions,
     });
+    const result = schema.parse(completion);
 
-    const response = AIResponse[0].text as string;
+    // console.log(`💬 Original AI response: `, completion);
 
-    // console.log(`💬 Original AI response: `, response);
-
-    return response;
+    return result;
   } catch (err: any) {
     console.error(err.response);
 

@@ -1,21 +1,11 @@
-import {
-  ChatCompletionRequestMessage,
-  Configuration,
-  CreateChatCompletionRequest,
-  OpenAIApi,
-} from "openai";
 import type { FinalVideoDataFromServer, VideoMetadata } from "./interfaces";
 import dotenv from "dotenv";
 import { checkValidJson, extractJson } from "./openai_utils";
 import dJSON from "dirty-json";
 import { getPrompts } from "./upstash";
 import { getAnthropicChatResponse } from "./anthropic";
+import { MessageParam } from "@anthropic-ai/sdk/resources";
 dotenv.config();
-
-const configuration = new Configuration({ apiKey: process.env.OPENAI_API_KEY });
-const openai = new OpenAIApi(configuration);
-
-const breaker = `============================`;
 
 // Assume the following values if the user hasn't mentioned about them:
 
@@ -33,35 +23,6 @@ const breaker = `============================`;
 //   },
 // }
 
-export async function getAIChatResponse(
-  messages: ChatCompletionRequestMessage[],
-  user: CreateChatCompletionRequest["user"],
-  options: Partial<CreateChatCompletionRequest> = {}
-): Promise<string> {
-  try {
-    const { data: AIResponse } = await openai.createChatCompletion({
-      messages,
-      user,
-      model: "gpt-3.5-turbo",
-      temperature: 1,
-      //   top_p: defaultOpenAIRequest.top_p, // disabled as per the docs recommendation.
-      //   frequency_penalty: defaultOpenAIRequest.frequency_penalty,
-      max_tokens: 1000,
-      ...options,
-    });
-
-    const response = AIResponse.choices[0].message?.content as string;
-
-    // console.log(`💬 Original AI response: `, response);
-
-    return response;
-  } catch (err: any) {
-    console.error(err.response);
-
-    throw `Error while fetching response: ${err}`;
-  }
-}
-
 // Part 1: Getting video metadata
 export async function getVideoMetadata(
   initialVideoData: Pick<
@@ -78,7 +39,7 @@ export async function getVideoMetadata(
     initialVideoData.prompt
   );
 
-  const messages: ChatCompletionRequestMessage[] = [
+  const messages: MessageParam[] = [
     { role: "user", content: userPrompt },
     { role: "assistant", content: prompts.videoMetadata_system },
     ,
@@ -91,7 +52,7 @@ export async function getVideoMetadata(
     // console.log(`🚨 CHECKING SYSTEM PROMPT: ${messages[0].content}`);
     // console.log(`🚨 CHECKING USER PROMPT: ${messages[1].content}`);
 
-    const response = await getAnthropicChatResponse(messages, userId);
+    const response = await getAnthropicChatResponse(messages);
 
     const extractedJson = extractJson(response);
 
@@ -139,19 +100,19 @@ export async function getTalkingPointForIntro(
     .replace("{replaceMe.description}", metadata.description)
     .replace("{replaceMe.contentsOfVideo}", contentsOfVideo);
 
-  console.log("user promt="+userPrompt);
-  console.log("!!!PROMT END!!!")
+  console.log("user promt=" + userPrompt);
+  console.log("!!!PROMT END!!!");
 
-  const messages: ChatCompletionRequestMessage[] = [
+  const messages: MessageParam[] = [
     { role: "user", content: userPrompt },
-    { role: "system", content: prompts.intro_system },
+    { role: "assistant", content: prompts.intro_system },
   ];
 
   try {
     tryCount = tryCount + 1;
     console.info(`Getting Intro #${tryCount} TRY!`);
 
-    const response = await getAnthropicChatResponse(messages, userId);
+    const response = await getAnthropicChatResponse(messages);
     const extractedJson = extractJson(response);
 
     const isJSONValid = await checkValidJson(extractedJson);
@@ -199,16 +160,16 @@ export async function getTalkingPoints(
     .replace("{replaceMe.originalPrompt}", videoData.prompt)
     .replace("{replaceMe.referenceData}", videoData.referenceData);
 
-  const messages: ChatCompletionRequestMessage[] = [
+  const messages: MessageParam[] = [
     { role: "user", content: userPrompt },
-    { role: "system", content: prompts.talkingPoints_system },
+    { role: "assistant", content: prompts.talkingPoints_system },
   ];
 
   try {
     tryCount = tryCount + 1;
     console.info(`Getting Talking Points #${tryCount} TRY!`);
 
-    const response = await getAnthropicChatResponse(messages, videoData.userId);
+    const response = await getAnthropicChatResponse(messages);
     const extractedJson = extractJson(response);
 
     const isJSONValid = await checkValidJson(extractedJson);
@@ -246,16 +207,16 @@ export async function getTitlesFromData(
     data
   );
 
-  const messages: ChatCompletionRequestMessage[] = [
+  const messages: MessageParam[] = [
     { role: "user", content: userPrompt },
-    { role: "system", content: prompts.titles_system },
+    { role: "assistant", content: prompts.titles_system },
   ];
 
   try {
     tryCount = tryCount + 1;
     console.info(`Getting Titles #${tryCount} TRY!`);
 
-    const response = await getAnthropicChatResponse(messages, userId);
+    const response = await getAnthropicChatResponse(messages);
     const extractedJson = extractJson(response);
 
     console.info(response);
@@ -303,16 +264,16 @@ export async function getTableFromData(
     videoMetadata.table.label
   );
 
-  const messages: ChatCompletionRequestMessage[] = [
+  const messages: MessageParam[] = [
     { role: "user", content: userPrompt },
-    { role: "system", content: prompts.tables_system },
+    { role: "assistant", content: prompts.tables_system },
   ];
 
   try {
     tryCount = tryCount + 1;
     console.info(`Getting Table #${tryCount} TRY!`);
 
-    const response = await getAnthropicChatResponse(messages, userId);
+    const response = await getAnthropicChatResponse(messages);
     const extractedJson = extractJson(response);
 
     const isJSONValid = await checkValidJson(extractedJson);
@@ -361,16 +322,16 @@ export async function getTalkingPointForOutro(
     contentsOfVideo
   );
 
-  const messages: ChatCompletionRequestMessage[] = [
+  const messages: MessageParam[] = [
     { role: "user", content: userPrompt },
-    { role: "system", content: prompts.outro_system },
+    { role: "assistant", content: prompts.outro_system },
   ];
 
   try {
     tryCount = tryCount + 1;
     console.info(`Getting Outro #${tryCount} TRY!`);
 
-    const response = await getAnthropicChatResponse(messages, userId);
+    const response = await getAnthropicChatResponse(messages);
     const extractedJson = extractJson(response);
 
     const isJSONValid = await checkValidJson(extractedJson);

@@ -6,21 +6,28 @@
   "engines": {
     "node": "18"
   },
+  "type": "module",
   "scripts": {
     "start:js": "npm run build && node build/index.js",
-    "start": "ts-node src/index.ts",
-    "start:dev": "nodemon src/index.ts",
-    "build": "rimraf ./build && tsc",
+    "start": "npx tsx src/index.ts",
+    "start:dev": "nodemon --watch 'src/**/*.ts' --exec npx tsx src/index.ts",
+    "build": "rimraf ./build && tsc && babel ./build --out-dir ./build --extensions \".js,.ts\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
+    "@babel/cli": "^7.24.6",
+    "@babel/core": "^7.24.6",
+    "@babel/plugin-transform-modules-commonjs": "^7.24.6",
+    "@babel/preset-env": "^7.24.6",
+    "@babel/preset-typescript": "^7.24.6",
     "@types/cors": "^2.8.13",
     "@types/express": "^4.17.17",
     "@types/node": "^20.1.0",
-    "nodemon": "^2.0.20",
-    "rimraf": "^4.1.2",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.0.4"
+    "nodemon": "^2.0.22",
+    "rimraf": "^4.4.1",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.11.2",
+    "typescript": "^5.4.5"
   },
   "dependencies": {
     "@azure/cognitiveservices-imagesearch": "^3.0.1",
@@ -39,6 +46,7 @@
     "firebase": "^9.17.1",
     "llm-polyglot": "^1.0.0",
     "microsoft-cognitiveservices-speech-sdk": "^1.28.0",
+    "openai": "^4.47.3",
     "serpapi": "^2.1.0",
     "zod": "^3.22.4"
   }

@@ -4,7 +4,6 @@ import {
   getTalkingPointForOutro,
   getTitlesFromData,
 } from "./openai";
-import { getBingImages } from "./bing/images";
 import {
   CustomImageDataFromBing,
   VideoMetadata,
@@ -17,7 +16,7 @@ import {
 import { createTTSAudio } from "./textToSpeech";
 import { getGoogleImages } from "./serpapi/images";
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function getVideoSectionsMedia(props: {
   metadata: VideoMetadata;

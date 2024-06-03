@@ -5,14 +5,15 @@
     "rootDir": "src",
     "allowSyntheticDefaultImports": true, //
     "strict": false,
-    "target": "es5",
+    "target": "es6",
     "lib": ["ESNext"], //
     "moduleResolution": "Node",
     "allowJs": true,
     "esModuleInterop": true,
-    "module": "commonjs",
+    "module": "ES6",
     "paths": {
       "~/*": ["./src/*"]
     }
-  }
+  },
+  "include": ["src"]
 }

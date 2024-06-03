@@ -1,10 +1,10 @@
-import { Configuration, OpenAIApi, CreateCompletionRequest } from "openai";
+// import { Configuration, OpenAIApi, CreateCompletionRequest } from "openai";
 import dJSON from "dirty-json";
 import dotenv from "dotenv";
 dotenv.config();
 
-const configuration = new Configuration({ apiKey: process.env.OPENAI_API_KEY });
-const openai = new OpenAIApi(configuration);
+// const configuration = new Configuration({ apiKey: process.env.OPENAI_API_KEY });
+// const openai = new OpenAIApi(configuration);
 
 export async function checkValidJson(jsonResponse: string): Promise<boolean> {
   try {
@@ -39,28 +39,28 @@ export function extractJson(data: string): string {
   return dataAsJSON;
 }
 
-const defaultOpenAIRequest: CreateCompletionRequest = {
-  model: "text-davinci-003",
-  prompt: "Say this is a test",
-  temperature: 0.7,
-  max_tokens: 1000,
-  // top_p: 1,
-  frequency_penalty: 0,
-  presence_penalty: 0.6,
-};
+// const defaultOpenAIRequest: CreateCompletionRequest = {
+//   model: "text-davinci-003",
+//   prompt: "Say this is a test",
+//   temperature: 0.7,
+//   max_tokens: 1000,
+//   // top_p: 1,
+//   frequency_penalty: 0,
+//   presence_penalty: 0.6,
+// };
 
-export async function checkModerationFlag(input: string) {
-  const { data: moderationsData } = await openai.createModeration({ input });
+// export async function checkModerationFlag(input: string) {
+//   const { data: moderationsData } = await openai.createModeration({ input });
 
-  const [results] = moderationsData.results;
+//   const [results] = moderationsData.results;
 
-  const isFlagged = results?.flagged;
+//   const isFlagged = results?.flagged;
 
-  console.log(
-    `=====================\nPrompt is ${
-      isFlagged ? "FLAGGED!" : "SAFE."
-    }\n=====================`
-  );
+//   console.log(
+//     `=====================\nPrompt is ${
+//       isFlagged ? "FLAGGED!" : "SAFE."
+//     }\n=====================`
+//   );
 
-  return { isFlagged };
-}
+//   return { isFlagged };
+// }
